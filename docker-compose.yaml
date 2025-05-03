@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: db-front
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ygo
+      POSTGRES_USER: ygo
+      POSTGRES_PASSWORD: ygo
+    volumes:
+      - yu_gi_oh_db:/var/lib/postgresql/data
+
+volumes:
+  yu_gi_oh_db:
