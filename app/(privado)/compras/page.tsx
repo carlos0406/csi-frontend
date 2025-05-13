@@ -4,11 +4,18 @@ import { Button } from "@/components/ui/button"
 import { format, parseISO } from "date-fns"
 import { ptBR } from "date-fns/locale"
 import { getPurchases } from "@/utils/api"
+import { PaginationComponent } from "@/components/pagination"
 
+type Props = {
+  searchParams: {
+    page: number
+  }
+}
 
-export default async function ListasCompra() {
-  const response =  await getPurchases()
-  const purchases = response.data
+export default async function ListasCompra({searchParams}: Props  ) {
+  const {page} = await searchParams;
+  const response =  await getPurchases({page})
+  const {data:purchases, ...pagination} = response.data
   return (
     <div className="container mx-auto py-4 sm:py-8 px-3 sm:px-4 max-w-5xl">
       <h1 className="text-2xl font-bold mb-6">Minhas Listas de Compra</h1>
@@ -39,6 +46,7 @@ export default async function ListasCompra() {
                 ))}
               </tbody>
             </table>
+            <PaginationComponent currentPage={pagination.page} pageSize={10} totalRecords={pagination.total} />
           </div>
         </div>
       </div>

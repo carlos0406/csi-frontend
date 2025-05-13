@@ -9,14 +9,15 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface ComboboxProps {
-  options: { value: string; label: string }[]
-  value: string
-  onChange: (value: string) => void
+  options: { value: any; label: string }[]
+  value: any
+  onChange: (value: any) => void
   placeholder?: string
   emptyMessage?: string
   className?: string
   loading?: boolean
   onSearch?: (value: string) => void
+  shouldFilter?: boolean
 }
 
 export function Combobox({
@@ -28,13 +29,15 @@ export function Combobox({
   className,
   loading = false,
   onSearch,
+  shouldFilter = true,
+  
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState("")
   const handleInputChange = React.useCallback((value: string) => {
     setInputValue(value)
     
-    if (value.length >= 5 && onSearch) {
+    if (value.length >= 3 && onSearch) {
       onSearch(value)
     }
   }, [onSearch])
@@ -62,7 +65,7 @@ export function Combobox({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start" side="bottom">
-        <Command shouldFilter={false}>
+        <Command shouldFilter={shouldFilter}>
           <CommandInput 
             placeholder={`Buscar ${placeholder.toLowerCase()}...`}
             value={inputValue}
@@ -83,9 +86,10 @@ export function Combobox({
                       onChange(option.value)
                       clearSearch()
                       setOpen(false)
-                    }} key={option.value} className="cursor-pointer">
+                    }} key={String(option.value)} className="cursor-pointer">
                       <CommandItem
-                        value={option.value}
+                      value={option.label}
+                        // value={option.value}
                         onSelect={() => {
                           onChange(option.value)
                           clearSearch()

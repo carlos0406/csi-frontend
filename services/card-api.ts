@@ -46,11 +46,31 @@ export async function getCardById(id: string): Promise<Card | undefined> {
 }
 
 // Função para obter todas as raridades disponíveis
-export function getAvailableRarities(): string[] {
-  const rarities = new Set<string>()
-  cardDatabase.forEach((card) => rarities.add(card.rarity))
-  return Array.from(rarities)
-}
+  export const Allrarities = [
+    "Common",
+    "Rare",
+    "Super Rare",
+    "Ultra Rare",
+    "Secret Rare",
+    "Ultimate Rare",
+    "Ghost Rare",
+    "Gold Rare",
+    "Premium Gold Rare",
+    "Gold Secret Rare",
+    "Platinum Rare",
+    "Platinum Secret Rare",
+    "Mosaic Rare",
+    "Starfoil Rare",
+    "Duel Terminal Rare",
+    "Collector’s Rare",
+    "Starlight Rare",
+    "Prismatic Secret Rare (nome antigo de Starlight no OCG)",
+    "Quarter Century Secret Rare",
+    "Extra Secret Rare",
+    "Ghost/Gold Rare",
+    "10000 Secret Rare",
+    "Millennium Rare (mais comum no OCG, mas conhecida no TCG)",
+  ]
 
 // Função para obter todos os sets disponíveis
 export function getAvailableSets(): string[] {

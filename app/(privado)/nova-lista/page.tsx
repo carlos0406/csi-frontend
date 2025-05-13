@@ -1,26 +1,36 @@
 "use client"
 
 import type React from "react"
-
+import { number, z } from "zod"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Form, FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form"
+import { useForm, useFieldArray } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus, Trash2 } from "lucide-react"
 import { Combobox } from "@/components/ui/combobox"
-import { searchCards, getAvailableRarities, getAvailableSets } from "@/services/card-api"
+import { Allrarities } from "@/services/card-api"
+import { usePurchases } from "@/hooks/usePurchases"
+import { useToast } from "@/hooks/use-toast"
+import { useCards } from "@/hooks/useCards"
+import { ApiCard } from "@/utils/apiTypes"
 
-interface Item {
-  id: number
-  carta: string
-  cartaNome: string
-  raridade: string
-  colecao: string
-  quantidade: number
-  precoUnitario: number
-}
+const itemSchema = z.object({
+  cardId: z.number().min(1, { message: "Select a card" }),
+  cardName: z.string().min(1, { message: "Card name is required" }),
+  rarity: z.string().min(1, { message: "Select a rarity" }),
+  collection: z.string().min(1, { message: "Select a collection" }),
+  quantity: z.number().min(1, { message: "Minimum quantity is 1" }),
+  unit_price: z.number().min(0, { message: "Price must be non-negative" }),
+})
+
+const formSchema = z.object({
+  purchaseId: z.string().min(1, { message: "Select a purchase" }),
+  items: z.array(itemSchema).min(1, { message: "Add at least one item to the list" }),
+})
 
 interface CardOption {
   value: string
@@ -29,264 +39,328 @@ interface CardOption {
 
 export default function NovaLista() {
   const router = useRouter()
-  const [compra, setCompra] = useState("")
-  const [items, setItems] = useState<Item[]>([])
-  const [novoItem, setNovoItem] = useState<Omit<Item, "id">>({
-    carta: "",
-    cartaNome: "",
-    raridade: "",
-    colecao: "",
-    quantidade: 1,
-    precoUnitario: 0,
+  const { toast } = useToast()
+  const [rarityOptions, setRarityOptions] = useState<CardOption[]>([])
+  const [collectionOptions, setCollectionOptions] = useState<CardOption[]>([])
+  const {isLoading:isLoadingCard,cards,setCardQuery} = useCards()
+  const cardOption = cards?.map((card: ApiCard) => ({
+    value: card.id,
+    label: card.name,
+  }))
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      purchaseId: "",
+      items: [],
+    },
   })
 
-  // Estado para as opções de cartas
-  const [cardOptions, setCardOptions] = useState<CardOption[]>([])
-  const [isSearching, setIsSearching] = useState(false)
+  const newItemForm = useForm<z.infer<typeof itemSchema>>({
+    resolver: zodResolver(itemSchema),
+    defaultValues: {
+      cardId: 0,
+      cardName: "",
+      rarity: "",
+      collection: "",
+      quantity: 1,
+      unit_price: 0,
+    },
+  })
 
-  // Estado para as opções de raridade e coleção
-  const [raridadeOptions, setRaridadeOptions] = useState<CardOption[]>([])
-  const [colecaoOptions, setColecaoOptions] = useState<CardOption[]>([])
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  })
 
-  // Carregar opções de raridade e coleção
   useEffect(() => {
-    // Carregar raridades
-    const raridades = getAvailableRarities().map((raridade) => ({
-      value: raridade,
-      label: raridade,
+    const rarities = Allrarities.map((rarity) => ({
+      value: rarity,
+      label: rarity,
     }))
-    setRaridadeOptions(raridades)
+    setRarityOptions(rarities)
 
-    // Carregar coleções
-    const colecoes = getAvailableSets().map((set) => ({
-      value: set,
-      label: set,
-    }))
-    setColecaoOptions(colecoes)
+
   }, [])
+  
 
-  const handleItemChange = (field: keyof Omit<Item, "id">, value: string | number) => {
-    setNovoItem((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleCardSearch = async (query: string) => {
-    if (query.length < 5) {
-      setCardOptions([]) // Limpa as opções se o texto for menor que 5 caracteres
-      return
-    }
-  
-    setIsSearching(true) // Ativa o estado de carregamento
-  
-    try {
-      const response = await fetch(`http://localhost:3000/cards?name=${query}`)
-      const results = await response.json()
-  
-      const options = results.map((card: { id: string; name: string }) => ({
-        value: card.id,
-        label: card.name,
-      }))
-  
-      setCardOptions(options)
-    } catch (error) {
-      console.error("Erro ao buscar cartas:", error)
-      setCardOptions([]) // Limpa as opções em caso de erro
-    } finally {
-      setIsSearching(false) // Desativa o estado de carregamento
-    }
-   
-  }
-
-  const handleCardSelect = (cardId: string) => {
-    const selectedCard = cardOptions.find((option) => option.value === cardId)
+  const handleCardSelect = (cardId: number) => {
+    console.log(cardId)
+    console.log(cardOption)
+    const selectedCard = cards?.find((card) => card.id === cardId)
+    console.log(selectedCard)
     if (selectedCard) {
-      handleItemChange("carta", cardId)
-      handleItemChange("cartaNome", selectedCard.label)
+      newItemForm.setValue("cardId", selectedCard.id)
+      newItemForm.setValue("cardName", selectedCard.name)
+      newItemForm.clearErrors("cardId")
+      newItemForm.clearErrors("cardName")
+      setCollectionOptions(
+        Array.from(new Set(selectedCard.card_sets)).map((set: string) => ({
+          value: set,
+          label: set,
+        }))
+      )
     }
   }
 
-  const adicionarItem = () => {
-    if (!novoItem.carta || !novoItem.raridade || !novoItem.colecao) {
-      alert("Preencha todos os campos do item")
-      return
-    }
+  const addItem = () => {
+    newItemForm.handleSubmit((data) => {
+      append(data)
+      newItemForm.reset({
+        cardId: 0,
+        cardName: "",
+        rarity: "",
+        collection: "",
+        quantity: 1,
+        unit_price: 0,
+      })
+    })()
+  }
 
-    setItems((prev) => [...prev, { ...novoItem, id: Date.now() }])
-    setNovoItem({
-      carta: "",
-      cartaNome: "",
-      raridade: "",
-      colecao: "",
-      quantidade: 1,
-      precoUnitario: 0,
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    console.log("Shopping list created:", data)
+    toast({
+      title: "Success!",
+      description: "Shopping list created successfully!",
     })
-  }
-
-  const removerItem = (id: number) => {
-    setItems((prev) => prev.filter((item) => item.id !== id))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!compra) {
-      alert("Selecione uma compra")
-      return
-    }
-    if (items.length === 0) {
-      alert("Adicione pelo menos um item à lista")
-      return
-    }
-
-    console.log("Lista criada:", { compra, items })
-    alert("Lista de compra criada com sucesso!")
     router.push("/listas-compra")
   }
+
+  const { purchases, error, isLoading: isLoadPurchases } = usePurchases()
+  const purchaseOptions = purchases?.data.map((purchase) => ({
+    value: purchase.id,
+    label: purchase.name,
+  })) || []
 
   return (
     <div className="container mx-auto py-4 sm:py-8 px-3 sm:px-4 max-w-4xl">
       <h1 className="text-2xl font-bold mb-6">Nova Lista de Compra</h1>
-
       <div className="bg-white p-4 sm:p-6 rounded-md shadow-sm border">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="compra">Selecione Compra</Label>
-            <Select value={compra} onValueChange={setCompra}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma compra" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="compra1">COMPRA DE ABRIL II</SelectItem>
-                <SelectItem value="compra2">COMPRA DE MAIO</SelectItem>
-                <SelectItem value="compra3">COMPRA DE JUNHO</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="purchaseId"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <Label htmlFor="purchaseId">Selecione Compra</Label>
+                  <FormControl>
+                    <Combobox
+                      options={isLoadPurchases ? [] : purchaseOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Selecione uma compra"
+                      emptyMessage="Nenhuma compra encontrada."
+                      loading={isLoadPurchases}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-          <div className="border-t pt-4">
-            <h3 className="font-medium mb-4">Adicionar Item</h3>
-
-            <div className="grid grid-cols-1 gap-4 mb-4">
-              <div className="space-y-2">
-                <Label htmlFor="carta">Carta</Label>
-                <Combobox
-                  options={cardOptions}
-                  value={novoItem.carta}
-                  onChange={handleCardSelect}
-                  placeholder="Buscar carta..."
-                  emptyMessage="Nenhuma carta encontrada. Digite para buscar."
-                  loading={isSearching}
-                  onSearch={handleCardSearch}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="raridade">Raridade</Label>
-                <Combobox
-                  options={raridadeOptions}
-                  value={novoItem.raridade}
-                  onChange={(value) => handleItemChange("raridade", value)}
-                  placeholder="Selecione a raridade"
-                  emptyMessage="Nenhuma raridade disponível."
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="space-y-2">
-                <Label htmlFor="colecao">Coleção</Label>
-                <Combobox
-                  options={colecaoOptions}
-                  value={novoItem.colecao}
-                  onChange={(value) => handleItemChange("colecao", value)}
-                  placeholder="Selecione a coleção"
-                  emptyMessage="Nenhuma coleção disponível."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="quantidade">Quantidade</Label>
-                <Input
-                  id="quantidade"
-                  type="number"
-                  min="1"
-                  value={novoItem.quantidade}
-                  onChange={(e) => handleItemChange("quantidade", Number.parseInt(e.target.value))}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="precoUnitario">Preço Unitário</Label>
-                <Input
-                  id="precoUnitario"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={novoItem.precoUnitario}
-                  onChange={(e) => handleItemChange("precoUnitario", Number.parseFloat(e.target.value))}
-                />
-              </div>
-            </div>
-
-            <Button
-              type="button"
-              onClick={adicionarItem}
-              className="bg-gray-800 hover:bg-gray-700 text-white h-12 sm:h-10 w-full sm:w-auto"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Item
-            </Button>
-          </div>
-
-          {items.length > 0 && (
             <div className="border-t pt-4">
-              <h3 className="font-medium mb-4">Itens Adicionados</h3>
+              <h3 className="font-medium mb-4">Adicionar Item</h3>
 
-              <div className="overflow-x-auto -mx-4 sm:mx-0">
-                <div className="inline-block min-w-full align-middle">
-                  <table className="min-w-full border-collapse">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        <th className="text-left p-2 text-sm">Carta</th>
-                        <th className="text-left p-2 text-sm">Raridade</th>
-                        <th className="text-left p-2 text-sm">Coleção</th>
-                        <th className="text-left p-2 text-sm">Qtd</th>
-                        <th className="text-left p-2 text-sm">Preço Unit.</th>
-                        <th className="text-left p-2 text-sm">Total</th>
-                        <th className="text-left p-2 text-sm">Ações</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((item) => (
-                        <tr key={item.id} className="border-b">
-                          <td className="p-2 text-sm">{item.cartaNome}</td>
-                          <td className="p-2 text-sm">{item.raridade}</td>
-                          <td className="p-2 text-sm">{item.colecao}</td>
-                          <td className="p-2 text-sm">{item.quantidade}</td>
-                          <td className="p-2 text-sm">R$ {item.precoUnitario.toFixed(2)}</td>
-                          <td className="p-2 text-sm">R$ {(item.quantidade * item.precoUnitario).toFixed(2)}</td>
-                          <td className="p-2 text-sm">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removerItem(item.id)}
-                              className="text-red-500 hover:text-red-700 p-1"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <div className="grid grid-cols-1 gap-4 mb-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cardId">Carta</Label>
+                  <FormField
+                    control={newItemForm.control}
+                    name="cardId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Combobox
+                            options={cardOption?? []}
+                            value={field.value}
+                            onChange={handleCardSelect}
+                            shouldFilter={false}
+                            placeholder="Buscar carta..."
+                            emptyMessage="Nenhuma carta encontrada. Digite para buscar."
+                            loading={isLoadingCard}
+                            onSearch={setCardQuery}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="rarity">Raridade</Label>
+                  <FormField
+                    control={newItemForm.control}
+                    name="rarity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Combobox
+                            options={rarityOptions}
+                            value={field.value}
+                            onChange={(value) => {
+                              field.onChange(value)
+                              newItemForm.clearErrors("rarity")
+                            }}
+                            placeholder="Selecione a raridade"
+                            emptyMessage="Nenhuma raridade disponível."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
               </div>
-            </div>
-          )}
 
-          <Button type="submit" className="bg-gray-800 hover:bg-gray-700 text-white h-12 sm:h-10 w-full sm:w-auto">
-            Criar Lista de Compra
-          </Button>
-        </form>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="space-y-2">
+                  <Label htmlFor="collection">Coleção</Label>
+                  <FormField
+                    control={newItemForm.control}
+                    name="collection"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Combobox
+                            options={collectionOptions}
+                            value={field.value}
+                            onChange={(value) => {
+                              field.onChange(value)
+                              newItemForm.clearErrors("collection")
+                            }}
+                            placeholder="Selecione a coleção"
+                            emptyMessage="Nenhuma coleção disponível."
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantidade</Label>
+                  <FormField
+                    control={newItemForm.control}
+                    name="quantity"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            id="quantity"
+                            type="number"
+                            min="1"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(Number.parseInt(e.target.value) || 0)
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="unit_price">Preço Unitário</Label>
+                  <FormField
+                    control={newItemForm.control}
+                    name="unit_price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Input
+                            id="unit_price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(Number.parseFloat(e.target.value) || 0)
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                onClick={addItem}
+                className="bg-gray-800 hover:bg-gray-700 text-white h-12 sm:h-10 w-full sm:w-auto"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Item
+              </Button>
+            </div>
+            {form.formState.errors.items && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                  <p className="text-sm">{form.formState.errors.items.message}</p>
+              </div>
+            )}
+            {fields.length > 0 && (
+              <div className="border-t pt-4">
+                <h3 className="font-medium mb-4">Itens Adicionados</h3>
+
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <div className="inline-block min-w-full align-middle">
+                    <table className="min-w-full border-collapse">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          <th className="text-left p-2 text-sm">Carta</th>
+                          <th className="text-left p-2 text-sm">Raridade</th>
+                          <th className="text-left p-2 text-sm">Coleção</th>
+                          <th className="text-left p-2 text-sm">Qtd</th>
+                          <th className="text-left p-2 text-sm">Preço Unit.</th>
+                          <th className="text-left p-2 text-sm">Total</th>
+                          <th className="text-left p-2 text-sm">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {fields.map((item, index) => {
+                          const itemData = form.getValues(`items.${index}`)
+                          return (
+                            <tr key={item.id} className="border-b">
+                              <td className="p-2 text-sm">{itemData.cardName}</td>
+                              <td className="p-2 text-sm">{itemData.rarity}</td>
+                              <td className="p-2 text-sm">{itemData.collection}</td>
+                              <td className="p-2 text-sm">{itemData.quantity}</td>
+                              <td className="p-2 text-sm">R$ {itemData.unit_price.toFixed(2)}</td>
+                              <td className="p-2 text-sm">
+                                R$ {(itemData.quantity * itemData.unit_price).toFixed(2)}
+                              </td>
+                              <td className="p-2 text-sm">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => remove(index)}
+                                  className="text-red-500 hover:text-red-700 p-1"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <Button type="submit" className="bg-gray-800 hover:bg-gray-700 text-white h-12 sm:h-10 w-full sm:w-auto">
+              Criar Lista de Compra
+            </Button>
+          </form>
+        </Form>
       </div>
     </div>
   )

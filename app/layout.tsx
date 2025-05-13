@@ -7,6 +7,7 @@ import Footer from "@/components/footer"
 import ClientOnly from "@/components/ClientOnly"
 import { getCurrentUser } from "./actions/getCurrentUser"
 import { Toaster } from "@/components/ui/toaster"
+import ReactQueryProvider from "@/components/ReactQueryProvider"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,6 +26,7 @@ export default async function  RootLayout({
   return (
     <html lang="pt-BR">
       <body className={inter.className}>
+      <ReactQueryProvider>
         <div className="flex flex-col min-h-screen">
           <ClientOnly>
             <Header user={user}/>
@@ -33,6 +35,7 @@ export default async function  RootLayout({
           <main className="flex-1 bg-gray-50">{children}</main>
           <Footer />
         </div>
+        </ReactQueryProvider>
       </body>
     </html>
   )

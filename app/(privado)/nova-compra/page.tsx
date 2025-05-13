@@ -34,10 +34,14 @@ export default function NovaCompra() {
     },
   })
 
+  const { push } = useRouter()
+  
   async function onSubmit(values: z.infer<typeof formSchema>) {
     await createPurchase(values)
     toast({ title: "Compra criada com sucesso!", description: "Sua compra foi registrada.", color: "error" })
+    push("/compras")
   }
+
 
   return (
     <div className="container mx-auto py-4 sm:py-8 px-3 sm:px-4 max-w-3xl">
@@ -46,7 +50,6 @@ export default function NovaCompra() {
       <div className="bg-white p-4 sm:p-6 rounded-md shadow-sm border">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            
             <FormField
               control={form.control}
               name="name"
