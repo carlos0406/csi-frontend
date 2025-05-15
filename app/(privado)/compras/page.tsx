@@ -18,7 +18,7 @@ export default async function ListasCompra({searchParams}: Props  ) {
   const {data:purchases, ...pagination} = response.data
   return (
     <div className="container mx-auto py-4 sm:py-8 px-3 sm:px-4 max-w-5xl">
-      <h1 className="text-2xl font-bold mb-6">Minhas Listas de Compra</h1>
+      <h1 className="text-2xl font-bold mb-6">Compras cadastradas</h1>
       <div className="bg-white p-4 sm:p-6 rounded-md shadow-sm border mb-6 sm:mb-8">
         <div className="overflow-x-auto -mx-4 sm:mx-0">
           <div className="inline-block min-w-full align-middle">

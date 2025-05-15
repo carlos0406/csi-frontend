@@ -12,16 +12,17 @@ import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Plus, Trash2 } from "lucide-react"
 import { Combobox } from "@/components/ui/combobox"
-import { Allrarities } from "@/services/card-api"
 import { usePurchases } from "@/hooks/usePurchases"
 import { useToast } from "@/hooks/use-toast"
 import { useCards } from "@/hooks/useCards"
-import { ApiCard } from "@/utils/apiTypes"
+import { ApiCard, createShoppingList } from "@/utils/api"
+import { useRarities } from "@/hooks/useRarities"
 
 const itemSchema = z.object({
   cardId: z.number().min(1, { message: "Select a card" }),
   cardName: z.string().min(1, { message: "Card name is required" }),
-  rarity: z.string().min(1, { message: "Select a rarity" }),
+  rarityId: z.string().min(1, { message: "Select a rarity" }),
+  rarityName: z.string().min(1, { message: "Rarity name is required" }),
   collection: z.string().min(1, { message: "Select a collection" }),
   quantity: z.number().min(1, { message: "Minimum quantity is 1" }),
   unit_price: z.number().min(0, { message: "Price must be non-negative" }),
@@ -40,12 +41,16 @@ interface CardOption {
 export default function NovaLista() {
   const router = useRouter()
   const { toast } = useToast()
-  const [rarityOptions, setRarityOptions] = useState<CardOption[]>([])
   const [collectionOptions, setCollectionOptions] = useState<CardOption[]>([])
   const {isLoading:isLoadingCard,cards,setCardQuery} = useCards()
+  const {isLoading:isLoadingRarities,rarities} = useRarities()
   const cardOption = cards?.map((card: ApiCard) => ({
     value: card.id,
     label: card.name,
+  }))
+  const raritiesOptions = rarities?.map((rarity) => ({
+    value: rarity.id,
+    label: rarity.name,
   }))
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -61,7 +66,8 @@ export default function NovaLista() {
     defaultValues: {
       cardId: 0,
       cardName: "",
-      rarity: "",
+      rarityId: "",
+      rarityName: "",
       collection: "",
       quantity: 1,
       unit_price: 0,
@@ -73,20 +79,9 @@ export default function NovaLista() {
     name: "items",
   })
 
-  useEffect(() => {
-    const rarities = Allrarities.map((rarity) => ({
-      value: rarity,
-      label: rarity,
-    }))
-    setRarityOptions(rarities)
-
-
-  }, [])
   
 
   const handleCardSelect = (cardId: number) => {
-    console.log(cardId)
-    console.log(cardOption)
     const selectedCard = cards?.find((card) => card.id === cardId)
     console.log(selectedCard)
     if (selectedCard) {
@@ -109,7 +104,8 @@ export default function NovaLista() {
       newItemForm.reset({
         cardId: 0,
         cardName: "",
-        rarity: "",
+        rarityId: "",
+        rarityName: "",
         collection: "",
         quantity: 1,
         unit_price: 0,
@@ -117,13 +113,22 @@ export default function NovaLista() {
     })()
   }
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
-    console.log("Shopping list created:", data)
+  async function onSubmit (data: z.infer<typeof formSchema>) {
+    try{
+    await createShoppingList(data)
     toast({
-      title: "Success!",
-      description: "Shopping list created successfully!",
+      title: "Sucesso!",
+      description: "Lista de compras criada com sucesso!",
     })
-    router.push("/listas-compra")
+    } catch (error) {
+      console.error("Error creating shopping list:", error)
+      toast({
+        title: "Erro!",
+        description: "Falha ao criar lista de compras.",
+        variant: "destructive",
+      })
+    }
+    // router.push("/listas-compra")
   }
 
   const { purchases, error, isLoading: isLoadPurchases } = usePurchases()
@@ -192,16 +197,22 @@ export default function NovaLista() {
                   <Label htmlFor="rarity">Raridade</Label>
                   <FormField
                     control={newItemForm.control}
-                    name="rarity"
+                    name="rarityId"
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
                           <Combobox
-                            options={rarityOptions}
+                            options={raritiesOptions?? []}
                             value={field.value}
                             onChange={(value) => {
                               field.onChange(value)
-                              newItemForm.clearErrors("rarity")
+                              // Also set the rarity name
+                              const selectedRarity = rarities?.find(rarity => rarity.id === value)
+                              if (selectedRarity) {
+                                newItemForm.setValue("rarityName", selectedRarity.name)
+                              }
+                              newItemForm.clearErrors("rarityId")
+                              newItemForm.clearErrors("rarityName")
                             }}
                             placeholder="Selecione a raridade"
                             emptyMessage="Nenhuma raridade disponível."
@@ -328,7 +339,7 @@ export default function NovaLista() {
                           return (
                             <tr key={item.id} className="border-b">
                               <td className="p-2 text-sm">{itemData.cardName}</td>
-                              <td className="p-2 text-sm">{itemData.rarity}</td>
+                              <td className="p-2 text-sm">{itemData.rarityName}</td>
                               <td className="p-2 text-sm">{itemData.collection}</td>
                               <td className="p-2 text-sm">{itemData.quantity}</td>
                               <td className="p-2 text-sm">R$ {itemData.unit_price.toFixed(2)}</td>

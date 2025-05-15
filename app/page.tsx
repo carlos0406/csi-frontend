@@ -56,11 +56,11 @@ export default function Home() {
           <div className="flex items-start gap-3 mb-4">
             <Search className="h-6 w-6 text-gray-700" />
             <div>
-              <h2 className="font-medium text-lg">Visualizar Lista</h2>
+              <h2 className="font-medium text-lg">Visualizar minhas listas de compra</h2>
               <p className="text-sm text-gray-600">Veja os detalhes de uma lista específica</p>
             </div>
           </div>
-          <Link href="/listas-compra">
+          <Link href="/minhas-compras">
             <button className="bg-gray-800 text-white px-4 py-2 rounded text-sm hover:bg-gray-700 transition-colors">
               Visualizar
             </button>
