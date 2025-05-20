@@ -1,23 +1,34 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Check, ChevronsUpDown } from "lucide-react"
+import * as React from "react";
+import { Check, ChevronsUpDown } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ComboboxProps {
-  options: { value: any; label: string }[]
-  value: any
-  onChange: (value: any) => void
-  placeholder?: string
-  emptyMessage?: string
-  className?: string
-  loading?: boolean
-  onSearch?: (value: string) => void
-  shouldFilter?: boolean
+  options: { value: any; label: string }[];
+  value: any;
+  onChange: (value: any) => void;
+  placeholder?: string;
+  emptyMessage?: string;
+  className?: string;
+  loading?: boolean;
+  onSearch?: (value: string) => void;
+  shouldFilter?: boolean;
 }
 
 export function Combobox({
@@ -30,27 +41,29 @@ export function Combobox({
   loading = false,
   onSearch,
   shouldFilter = true,
-  
 }: ComboboxProps) {
-  const [open, setOpen] = React.useState(false)
-  const [inputValue, setInputValue] = React.useState("")
-  const handleInputChange = React.useCallback((value: string) => {
-    setInputValue(value)
-    
-    if (value.length >= 3 && onSearch) {
-      onSearch(value)
-    }
-  }, [onSearch])
-  
+  const [open, setOpen] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState("");
+  const handleInputChange = React.useCallback(
+    (value: string) => {
+      setInputValue(value);
+
+      if (value.length >= 3 && onSearch) {
+        onSearch(value);
+      }
+    },
+    [onSearch],
+  );
+
   const clearSearch = () => {
-    setInputValue("")
-  }
-  
+    setInputValue("");
+  };
+
   // Encontrar a opção selecionada
   const selectedOption = React.useMemo(() => {
-    return options.find(option => option.value === value)
-  }, [options, value])
-  
+    return options.find((option) => option.value === value);
+  }, [options, value]);
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -66,7 +79,7 @@ export function Combobox({
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start" side="bottom">
         <Command shouldFilter={shouldFilter}>
-          <CommandInput 
+          <CommandInput
             placeholder={`Buscar ${placeholder.toLowerCase()}...`}
             value={inputValue}
             onValueChange={handleInputChange}
@@ -77,27 +90,39 @@ export function Combobox({
             <CommandList>
               {options.length === 0 ? (
                 <CommandEmpty>
-                  {inputValue.length >= 5 ? emptyMessage : "Digite pelo menos 5 caracteres para buscar..."}
+                  {inputValue.length >= 5
+                    ? emptyMessage
+                    : "Digite pelo menos 5 caracteres para buscar..."}
                 </CommandEmpty>
               ) : (
                 <CommandGroup className="max-h-60 overflow-auto">
                   {options.map((option) => (
-                    <div onClick={() => {
-                      onChange(option.value)
-                      clearSearch()
-                      setOpen(false)
-                    }} key={String(option.value)} className="cursor-pointer">
+                    <div
+                      onClick={() => {
+                        onChange(option.value);
+                        clearSearch();
+                        setOpen(false);
+                      }}
+                      key={String(option.value)}
+                      className="cursor-pointer"
+                    >
                       <CommandItem
-                      value={option.label}
+                        value={option.label}
                         // value={option.value}
                         onSelect={() => {
-                          onChange(option.value)
-                          clearSearch()
-                          setOpen(false)
+                          onChange(option.value);
+                          clearSearch();
+                          setOpen(false);
                         }}
                       >
-                      
-                        <Check className={cn("mr-2 h-4 w-4", value === option.value ? "opacity-100" : "opacity-0")} />
+                        <Check
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            value === option.value
+                              ? "opacity-100"
+                              : "opacity-0",
+                          )}
+                        />
                         {option.label}
                       </CommandItem>
                     </div>
@@ -109,14 +134,17 @@ export function Combobox({
         </Command>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
 
-function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
-  let timeout: ReturnType<typeof setTimeout> | null = null
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number,
+): (...args: Parameters<T>) => void {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
 
   return (...args: Parameters<T>) => {
-    if (timeout) clearTimeout(timeout)
-    timeout = setTimeout(() => func(...args), wait)
-  }
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
 }

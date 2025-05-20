@@ -1,30 +1,29 @@
-
-import axios from 'axios';
-import { parseCookies } from 'nookies';
+import axios from "axios";
+import { parseCookies } from "nookies";
 export type ApiCard = {
-  id:number
-  name: string,
-  card_sets: string[]
-}
+  id: number;
+  name: string;
+  card_sets: string[];
+};
 
-export type ApiPurchase  = {
-  id: string
-  name: string
-  startDate: string
-  endDate: string
-  updatedAt: string
-}
+export type ApiPurchase = {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  updatedAt: string;
+};
 
 export type Pagination<T> = {
-  page: number
-  total: number
-  data: T[]
-}
+  page: number;
+  total: number;
+  data: T[];
+};
 
 export type ApiRarity = {
-  id: string
-  name: string
-}
+  id: string;
+  name: string;
+};
 
 export type ApiUser = {
   id: string;
@@ -47,42 +46,40 @@ export type ApiShoppingList = {
   purchase: ApiPurchaseDetails;
 };
 
-
 // Cria uma instância base do axios
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: "http://localhost:3000",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const cookies = parseCookies();
-    const token = cookies['next-auth.session-token'];
-    
+    const token = cookies["next-auth.session-token"];
+
     if (token && config.headers) {
-      config.headers.set('Cookie', `next-auth.session-token=${token}`);
+      config.headers.set("Cookie", `next-auth.session-token=${token}`);
     }
   }
-  
+
   return config;
 });
 
 export async function createPurchase(data: any) {
-  return api.post('/purchase', data);
+  return api.post("/purchase", data);
 }
 
 export async function createShoppingList(data: any) {
-  return api.post('/shopping-list', data); 
+  return api.post("/shopping-list", data);
 }
 
 export async function getRatities() {
-  const result = await api.get<ApiPurchase[]>('/rarities')
-  return result;  
+  const result = await api.get<ApiPurchase[]>("/rarities");
+  return result;
 }
-
 
 export async function getPurchases({
   page = 1,
@@ -91,18 +88,15 @@ export async function getPurchases({
   page?: number;
   limit?: number;
 }) {
-  const result = await api.get<Pagination<ApiPurchase>>('/purchase', {
-    params: { page, limit }
-  })
-  
-  return result;  
+  const result = await api.get<Pagination<ApiPurchase>>("/purchase", {
+    params: { page, limit },
+  });
+
+  return result;
 }
 
-
-export async function getCards (query: string) {
-  
-  return api.get<ApiCard[]>(`/cards?name=${query}`)
+export async function getCards(query: string) {
+  return api.get<ApiCard[]>(`/cards?name=${query}`);
 }
-
 
 export default api;

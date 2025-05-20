@@ -1,9 +1,9 @@
-import { getServerSession } from 'next-auth/next'
-import { getManager, entities } from '@auth/typeorm-adapter'
-import { authOptions } from '@/pages/api/auth/[...nextauth]'
+import { getServerSession } from "next-auth/next";
+import { getManager, entities } from "@auth/typeorm-adapter";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
 
 export async function getSession() {
-  return await getServerSession(authOptions)
+  return await getServerSession(authOptions);
 }
 
 let managerPromise: Promise<any> | null = null;
@@ -19,10 +19,13 @@ async function getConnectionManager() {
         schema: "users",
         useUTC: true,
         extra: {
-          ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-        }
+          ssl:
+            process.env.NODE_ENV === "production"
+              ? { rejectUnauthorized: false }
+              : false,
+        },
       },
-      entities
+      entities,
     });
   }
   return managerPromise;
@@ -31,48 +34,47 @@ async function getConnectionManager() {
 export async function getCurrentUser() {
   try {
     // Obter a sessão usando os authOptions definidos
-    const session = await getSession()
+    const session = await getSession();
     if (!session?.user?.email) {
-      return null
+      return null;
     }
-    
+
     const manager = await getConnectionManager();
-    const userRepository = manager.getRepository('UserEntity')
-    
+    const userRepository = manager.getRepository("UserEntity");
+
     // Se temos um ID na sessão, usamos ele para buscar o usuário
     if (session.user.id) {
       const user = await userRepository.findOne({
-        where: { id: session.user.id }
-      })
-      
+        where: { id: session.user.id },
+      });
+
       if (user) {
         return {
           id: user.id,
           email: user.email,
           name: user.name,
-          image: user.image
-        }
+          image: user.image,
+        };
       }
     }
-    
+
     // Fallback para busca por email caso o ID não esteja disponível
     const user = await userRepository.findOne({
-      where: { email: session.user.email }
-    })
-    
+      where: { email: session.user.email },
+    });
+
     if (!user) {
-      return null
+      return null;
     }
-    
+
     return {
       id: user.id,
       email: user.email,
       name: user.name,
-      image: user.image
-    }
-    
+      image: user.image,
+    };
   } catch (error: unknown) {
-    console.error('Error getting current user:', error)
-    return null
+    console.error("Error getting current user:", error);
+    return null;
   }
 }
