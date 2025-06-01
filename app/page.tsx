@@ -1,7 +1,7 @@
-import Link from "next/link";
-import { ShoppingCart, List, Plus, Search } from "lucide-react";
+import Link from 'next/link';
+import { ShoppingCart, List, Plus, Search } from 'lucide-react';
 
-export default function Home() {
+export default async function Home() {
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-2xl font-bold text-center mb-8">
@@ -31,9 +31,7 @@ export default function Home() {
             <List className="h-6 w-6 text-gray-700" />
             <div>
               <h2 className="font-medium text-lg">Todas as compras</h2>
-              <p className="text-sm text-gray-600">
-                Visualize e gerencie as compras
-              </p>
+              <p className="text-sm text-gray-600">Visualize e gerencie as compras</p>
             </div>
           </div>
           <Link href="/compras">
@@ -48,9 +46,7 @@ export default function Home() {
             <Plus className="h-6 w-6 text-gray-700" />
             <div>
               <h2 className="font-medium text-lg">Nova Lista de Compra</h2>
-              <p className="text-sm text-gray-600">
-                Adicione cartas à sua lista de compras
-              </p>
+              <p className="text-sm text-gray-600">Adicione cartas à sua lista de compras</p>
             </div>
           </div>
           <Link href="/nova-lista">
@@ -64,12 +60,8 @@ export default function Home() {
           <div className="flex items-start gap-3 mb-4">
             <Search className="h-6 w-6 text-gray-700" />
             <div>
-              <h2 className="font-medium text-lg">
-                Visualizar minhas listas de compra
-              </h2>
-              <p className="text-sm text-gray-600">
-                Veja os detalhes de uma lista específica
-              </p>
+              <h2 className="font-medium text-lg">Visualizar minhas listas de compra</h2>
+              <p className="text-sm text-gray-600">Veja os detalhes de uma lista específica</p>
             </div>
           </div>
           <Link href="/minhas-compras">

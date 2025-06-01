@@ -1,44 +1,36 @@
-"use client";
+'use client';
 
-import type React from "react";
-import { number, z } from "zod";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash2 } from "lucide-react";
-import { Combobox } from "@/components/ui/combobox";
-import { usePurchases } from "@/hooks/usePurchases";
-import { useToast } from "@/hooks/use-toast";
-import { useCards } from "@/hooks/useCards";
-import { ApiCard, createShoppingList } from "@/utils/api";
-import { useRarities } from "@/hooks/useRarities";
-
+import type React from 'react';
+import { z } from 'zod';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Form, FormField, FormItem, FormControl, FormMessage } from '@/components/ui/form';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Plus, Trash2 } from 'lucide-react';
+import { Combobox } from '@/components/ui/combobox';
+import { usePurchases } from '@/hooks/usePurchases';
+import { useToast } from '@/hooks/use-toast';
+import { useCards } from '@/hooks/useCards';
+import { ApiCard, createShoppingList } from '@/utils/api';
+import { useRarities } from '@/hooks/useRarities';
+import { formatPriceInput, formatQuantityInput, isValidKey } from '@/utils/formatUtils';
 const itemSchema = z.object({
-  cardId: z.number().min(1, { message: "Select a card" }),
-  cardName: z.string().min(1, { message: "Card name is required" }),
-  rarityId: z.string().min(1, { message: "Select a rarity" }),
-  rarityName: z.string().min(1, { message: "Rarity name is required" }),
-  collection: z.string().min(1, { message: "Select a collection" }),
-  quantity: z.number().min(1, { message: "Minimum quantity is 1" }),
-  unit_price: z.number().min(0, { message: "Price must be non-negative" }),
+  cardId: z.number().min(1, { message: 'Select a card' }),
+  cardName: z.string().min(1, { message: 'Card name is required' }),
+  rarityId: z.string().min(1, { message: 'Select a rarity' }),
+  rarityName: z.string().min(1, { message: 'Rarity name is required' }),
+  collection: z.string().min(1, { message: 'Select a collection' }),
+  quantity: z.number().min(1, { message: 'Minimum quantity is 1' }),
+  unit_price: z.number().min(0, { message: 'Price must be non-negative' }),
 });
 
 const formSchema = z.object({
-  purchaseId: z.string().min(1, { message: "Select a purchase" }),
-  items: z
-    .array(itemSchema)
-    .min(1, { message: "Add at least one item to the list" }),
+  purchaseId: z.string().min(1, { message: 'Select a purchase' }),
+  items: z.array(itemSchema).min(1, { message: 'Add at least one item to the list' }),
 });
 
 interface CardOption {
@@ -56,7 +48,7 @@ export default function NovaLista() {
     value: card.id,
     label: card.name,
   }));
-  const raritiesOptions = rarities?.map((rarity) => ({
+  const raritiesOptions = rarities?.map(rarity => ({
     value: rarity.id,
     label: rarity.name,
   }));
@@ -64,7 +56,7 @@ export default function NovaLista() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      purchaseId: "",
+      purchaseId: '',
       items: [],
     },
   });
@@ -73,10 +65,10 @@ export default function NovaLista() {
     resolver: zodResolver(itemSchema),
     defaultValues: {
       cardId: 0,
-      cardName: "",
-      rarityId: "",
-      rarityName: "",
-      collection: "",
+      cardName: '',
+      rarityId: '',
+      rarityName: '',
+      collection: '',
       quantity: 1,
       unit_price: 0,
     },
@@ -84,35 +76,36 @@ export default function NovaLista() {
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
-    name: "items",
+    name: 'items',
   });
 
   const handleCardSelect = (cardId: number) => {
-    const selectedCard = cards?.find((card) => card.id === cardId);
-    console.log(selectedCard);
+    const selectedCard = cards?.find(card => card.id === cardId);
     if (selectedCard) {
-      newItemForm.setValue("cardId", selectedCard.id);
-      newItemForm.setValue("cardName", selectedCard.name);
-      newItemForm.clearErrors("cardId");
-      newItemForm.clearErrors("cardName");
+      newItemForm.setValue('cardId', selectedCard.id);
+      newItemForm.setValue('cardName', selectedCard.name);
+      newItemForm.clearErrors('cardId');
+      newItemForm.clearErrors('cardName');
       setCollectionOptions(
         Array.from(new Set(selectedCard.card_sets)).map((set: string) => ({
           value: set,
           label: set,
-        })),
+        }))
       );
     }
   };
 
   const addItem = () => {
-    newItemForm.handleSubmit((data) => {
+    newItemForm.handleSubmit(data => {
+      data.unit_price = data.unit_price * 100;
       append(data);
+      setCollectionOptions([]);
       newItemForm.reset({
         cardId: 0,
-        cardName: "",
-        rarityId: "",
-        rarityName: "",
-        collection: "",
+        cardName: '',
+        rarityId: '',
+        rarityName: '',
+        collection: '',
         quantity: 1,
         unit_price: 0,
       });
@@ -123,23 +116,23 @@ export default function NovaLista() {
     try {
       await createShoppingList(data);
       toast({
-        title: "Sucesso!",
-        description: "Lista de compras criada com sucesso!",
+        title: 'Sucesso!',
+        description: 'Lista de compras criada com sucesso!',
       });
+      router.push('/minhas-compras');
     } catch (error) {
-      console.error("Error creating shopping list:", error);
+      console.error('Error creating shopping list:', error);
       toast({
-        title: "Erro!",
-        description: "Falha ao criar lista de compras.",
-        variant: "destructive",
+        title: 'Erro!',
+        description: 'Falha ao criar lista de compras.',
+        variant: 'destructive',
       });
     }
-    // router.push("/listas-compra")
   }
 
   const { purchases, error, isLoading: isLoadPurchases } = usePurchases();
   const purchaseOptions =
-    purchases?.data.map((purchase) => ({
+    purchases?.data.map(purchase => ({
       value: purchase.id,
       label: purchase.name,
     })) || [];
@@ -211,20 +204,15 @@ export default function NovaLista() {
                           <Combobox
                             options={raritiesOptions ?? []}
                             value={field.value}
-                            onChange={(value) => {
+                            onChange={value => {
                               field.onChange(value);
                               // Also set the rarity name
-                              const selectedRarity = rarities?.find(
-                                (rarity) => rarity.id === value,
-                              );
+                              const selectedRarity = rarities?.find(rarity => rarity.id === value);
                               if (selectedRarity) {
-                                newItemForm.setValue(
-                                  "rarityName",
-                                  selectedRarity.name,
-                                );
+                                newItemForm.setValue('rarityName', selectedRarity.name);
                               }
-                              newItemForm.clearErrors("rarityId");
-                              newItemForm.clearErrors("rarityName");
+                              newItemForm.clearErrors('rarityId');
+                              newItemForm.clearErrors('rarityName');
                             }}
                             placeholder="Selecione a raridade"
                             emptyMessage="Nenhuma raridade disponível."
@@ -249,9 +237,9 @@ export default function NovaLista() {
                           <Combobox
                             options={collectionOptions}
                             value={field.value}
-                            onChange={(value) => {
+                            onChange={value => {
                               field.onChange(value);
-                              newItemForm.clearErrors("collection");
+                              newItemForm.clearErrors('collection');
                             }}
                             placeholder="Selecione a coleção"
                             emptyMessage="Nenhuma coleção disponível."
@@ -273,13 +261,16 @@ export default function NovaLista() {
                         <FormControl>
                           <Input
                             id="quantity"
-                            type="number"
-                            min="1"
-                            {...field}
-                            onChange={(e) => {
-                              field.onChange(
-                                Number.parseInt(e.target.value) || 0,
-                              );
+                            type="text"
+                            inputMode="numeric"
+                            value={field.value || ''}
+                            onChange={e => {
+                              formatQuantityInput(e.target.value, field.onChange, e.target);
+                            }}
+                            onKeyDown={e => {
+                              if (!isValidKey(e.key)) {
+                                e.preventDefault();
+                              }
                             }}
                           />
                         </FormControl>
@@ -299,14 +290,27 @@ export default function NovaLista() {
                         <FormControl>
                           <Input
                             id="unit_price"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            {...field}
-                            onChange={(e) => {
-                              field.onChange(
-                                Number.parseFloat(e.target.value) || 0,
-                              );
+                            type="text"
+                            inputMode="decimal"
+                            placeholder="0,00"
+                            onChange={e => {
+                              formatPriceInput(e.target.value, field.onChange, e.target);
+                            }}
+                            onKeyDown={e => {
+                              if (!isValidKey(e.key, true)) {
+                                e.preventDefault();
+                              }
+                            }}
+                            onFocus={e => {
+                              if (e.target.value === '0,00') {
+                                e.target.value = '';
+                              }
+                            }}
+                            onBlur={e => {
+                              if (e.target.value === '') {
+                                e.target.value = '0,00';
+                                field.onChange(0);
+                              }
                             }}
                           />
                         </FormControl>
@@ -354,26 +358,15 @@ export default function NovaLista() {
                           const itemData = form.getValues(`items.${index}`);
                           return (
                             <tr key={item.id} className="border-b">
+                              <td className="p-2 text-sm">{itemData.cardName}</td>
+                              <td className="p-2 text-sm">{itemData.rarityName}</td>
+                              <td className="p-2 text-sm">{itemData.collection}</td>
+                              <td className="p-2 text-sm">{itemData.quantity}</td>
                               <td className="p-2 text-sm">
-                                {itemData.cardName}
+                                R$ {(itemData.unit_price / 100).toFixed(2)}
                               </td>
                               <td className="p-2 text-sm">
-                                {itemData.rarityName}
-                              </td>
-                              <td className="p-2 text-sm">
-                                {itemData.collection}
-                              </td>
-                              <td className="p-2 text-sm">
-                                {itemData.quantity}
-                              </td>
-                              <td className="p-2 text-sm">
-                                R$ {itemData.unit_price.toFixed(2)}
-                              </td>
-                              <td className="p-2 text-sm">
-                                R${" "}
-                                {(
-                                  itemData.quantity * itemData.unit_price
-                                ).toFixed(2)}
+                                R$ {(itemData.quantity * (itemData.unit_price / 100)).toFixed(2)}
                               </td>
                               <td className="p-2 text-sm">
                                 <Button

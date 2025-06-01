@@ -1,6 +1,6 @@
-import { getServerSession } from "next-auth/next";
-import { getManager, entities } from "@auth/typeorm-adapter";
-import { authOptions } from "@/pages/api/auth/[...nextauth]";
+import { getServerSession } from 'next-auth/next';
+import { getManager, entities } from '@auth/typeorm-adapter';
+import { authOptions } from '@/pages/api/auth/[...nextauth]';
 
 export async function getSession() {
   return await getServerSession(authOptions);
@@ -12,17 +12,14 @@ async function getConnectionManager() {
   if (!managerPromise) {
     managerPromise = getManager({
       dataSource: {
-        type: "postgres",
+        type: 'postgres',
         url: process.env.AUTH_TYPEORM_CONNECTION,
         entities: entities,
         synchronize: false,
-        schema: "users",
+        schema: 'users',
         useUTC: true,
         extra: {
-          ssl:
-            process.env.NODE_ENV === "production"
-              ? { rejectUnauthorized: false }
-              : false,
+          ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
         },
       },
       entities,
@@ -40,9 +37,8 @@ export async function getCurrentUser() {
     }
 
     const manager = await getConnectionManager();
-    const userRepository = manager.getRepository("UserEntity");
+    const userRepository = manager.getRepository('UserEntity');
 
-    // Se temos um ID na sessão, usamos ele para buscar o usuário
     if (session.user.id) {
       const user = await userRepository.findOne({
         where: { id: session.user.id },
@@ -74,7 +70,7 @@ export async function getCurrentUser() {
       image: user.image,
     };
   } catch (error: unknown) {
-    console.error("Error getting current user:", error);
+    console.error('Error getting current user:', error);
     return null;
   }
 }
