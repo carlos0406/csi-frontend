@@ -37,13 +37,21 @@ export default function NovaCompra() {
   const { push } = useRouter();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    await createPurchase(values);
-    toast({
-      title: 'Compra criada com sucesso!',
-      description: 'Sua compra foi registrada.',
-      color: 'error',
-    });
-    push('/compras');
+    try {
+      await createPurchase(values);
+      toast({
+        title: 'Compra criada com sucesso!',
+        description: 'Sua compra foi registrada.',
+        color: 'error',
+      });
+      push('/compras');
+    } catch {
+      toast({
+        title: 'Erro ao criar compra',
+        description: 'Ocorreu um erro ao tentar criar a compra. Por favor, tente novamente.',
+        color: 'error',
+      });
+    }
   }
 
   return (
