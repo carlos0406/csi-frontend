@@ -42,14 +42,14 @@ export default function NovaCompra() {
       toast({
         title: 'Compra criada com sucesso!',
         description: 'Sua compra foi registrada.',
-        color: 'error',
+        variant: 'success',
       });
       push('/compras');
     } catch {
       toast({
         title: 'Erro ao criar compra',
         description: 'Ocorreu um erro ao tentar criar a compra. Por favor, tente novamente.',
-        color: 'error',
+        variant: 'error',
       });
     }
   }
