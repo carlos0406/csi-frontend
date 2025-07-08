@@ -15,7 +15,9 @@ export default async function MyShoppingLists() {
   }
 
   const cookieStore = await cookies();
-  const token = cookieStore.get('next-auth.session-token')?.value;
+  const token =
+    cookieStore.get('next-auth.session-token')?.value ||
+    cookieStore.get('__Secure-next-auth.session-token')?.value;
 
   if (!token) {
     throw new Error('Não autorizado. Faça login para continuar.');
@@ -27,7 +29,7 @@ export default async function MyShoppingLists() {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
-      Cookie: `next-auth.session-token=${token}`,
+      Cookie: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token=${token}`,
     },
   });
 

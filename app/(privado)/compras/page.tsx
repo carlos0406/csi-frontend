@@ -17,7 +17,10 @@ export default async function ListasCompra({ searchParams }: Props) {
   const response = await getPurchases({ page });
   const { data: purchases, ...pagination } = response.data;
   const cookieStore = await cookies();
-  const token = cookieStore.get('next-auth.session-token')?.value;
+
+  const token =
+    cookieStore.get('next-auth.session-token')?.value ||
+    cookieStore.get('__Secure-next-auth.session-token')?.value;
 
   const url = `${process.env.NEXT_PUBLIC_API_URL}/users/admin`;
 
