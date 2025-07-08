@@ -1,5 +1,5 @@
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 import { settings } from '@/utils/settings';
 import { cookies } from 'next/headers';
