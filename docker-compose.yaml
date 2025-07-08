@@ -3,7 +3,7 @@ services:
     image: postgres:latest
     container_name: db-front
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_DB: ygo
       POSTGRES_USER: ygo

@@ -1,5 +1,5 @@
-import axios from "axios";
-import { parseCookies } from "nookies";
+import axios from 'axios';
+import { parseCookies } from 'nookies';
 export type ApiCard = {
   id: number;
   name: string;
@@ -46,22 +46,21 @@ export type ApiShoppingList = {
   purchase: ApiPurchaseDetails;
 };
 
-// Cria uma instância base do axios
 const api = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   withCredentials: true,
 });
 
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
+api.interceptors.request.use(config => {
+  if (typeof window !== 'undefined') {
     const cookies = parseCookies();
-    const token = cookies["next-auth.session-token"];
+    const token = cookies['next-auth.session-token'];
 
     if (token && config.headers) {
-      config.headers.set("Cookie", `next-auth.session-token=${token}`);
+      config.headers.set('Cookie', `next-auth.session-token=${token}`);
     }
   }
 
@@ -69,26 +68,20 @@ api.interceptors.request.use((config) => {
 });
 
 export async function createPurchase(data: any) {
-  return api.post("/purchase", data);
+  return api.post('/purchase', data);
 }
 
 export async function createShoppingList(data: any) {
-  return api.post("/shopping-list", data);
+  return api.post('/shopping-list', data);
 }
 
 export async function getRatities() {
-  const result = await api.get<ApiPurchase[]>("/rarities");
+  const result = await api.get<ApiPurchase[]>('/rarities');
   return result;
 }
 
-export async function getPurchases({
-  page = 1,
-  limit = 10,
-}: {
-  page?: number;
-  limit?: number;
-}) {
-  const result = await api.get<Pagination<ApiPurchase>>("/purchase", {
+export async function getPurchases({ page = 1, limit = 10 }: { page?: number; limit?: number }) {
+  const result = await api.get<Pagination<ApiPurchase>>('/purchase', {
     params: { page, limit },
   });
 
