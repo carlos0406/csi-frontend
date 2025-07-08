@@ -2,6 +2,8 @@ import GoogleProvider from 'next-auth/providers/google';
 import { TypeORMAdapter } from '@auth/typeorm-adapter';
 import NextAuth, { AuthOptions } from 'next-auth';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export const authOptions: AuthOptions = {
   adapter: TypeORMAdapter({
     type: 'postgres',
@@ -30,9 +32,13 @@ export const authOptions: AuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   cookies: {
     sessionToken: {
-      name: `next-auth.session-token`,
+      name: isProd ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
       options: {
-        domain: process.env.NODE_ENV === 'production' ? '.carlos0406.com' : undefined,
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: isProd,
+        domain: isProd ? '.carlos0406.com' : undefined,
       },
     },
   },
