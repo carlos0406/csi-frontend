@@ -37,7 +37,7 @@ export async function getCurrentUser() {
     }
 
     const manager = await getConnectionManager();
-    const userRepository = manager.getRepository('UserEntity');
+    const userRepository = manager.getRepository(entities.UserEntity);
 
     if (session.user.id) {
       const user = await userRepository.findOne({
