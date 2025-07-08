@@ -57,10 +57,12 @@ const api = axios.create({
 api.interceptors.request.use(config => {
   if (typeof window !== 'undefined') {
     const cookies = parseCookies();
-    const token = cookies['next-auth.session-token'];
+    const isProd = process.env.NODE_ENV === 'production';
+    const cookieName = isProd ? '__Secure-next-auth.session-token' : 'next-auth.session-token';
+    const token = cookies[cookieName];
 
     if (token && config.headers) {
-      config.headers.set('Cookie', `next-auth.session-token=${token}`);
+      config.headers.set('Cookie', `${cookieName}=${token}`);
     }
   }
 
