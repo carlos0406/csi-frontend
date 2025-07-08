@@ -7,9 +7,9 @@ import { PaginationComponent } from '@/components/pagination';
 import { cookies } from 'next/headers';
 
 type Props = {
-  searchParams: {
+  searchParams: Promise<{
     page: number;
-  };
+  }>;
 };
 
 export default async function ListasCompra({ searchParams }: Props) {

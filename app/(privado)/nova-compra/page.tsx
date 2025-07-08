@@ -1,36 +1,36 @@
-"use client";
-import type React from "react";
-import { z } from "zod";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Form, FormField } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useToast } from "@/hooks/use-toast";
-import { createPurchase } from "@/utils/api";
+'use client';
+import type React from 'react';
+import { z } from 'zod';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Form, FormField } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useToast } from '@/hooks/use-toast';
+import { createPurchase } from '@/utils/api';
 
 export default function NovaCompra() {
   const { toast } = useToast();
   const formSchema = z.object({
     name: z.string().min(2, {
-      message: "Nome deve ter pelo menos 2 caracteres",
+      message: 'Nome deve ter pelo menos 2 caracteres',
     }),
     startDate: z.string().min(10, {
-      message: "Data de início é obrigatória",
+      message: 'Data de início é obrigatória',
     }),
     endDate: z.string().min(10, {
-      message: "Data de fim é obrigatória",
+      message: 'Data de fim é obrigatória',
     }),
   });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      startDate: "",
-      endDate: "",
+      name: '',
+      startDate: '',
+      endDate: '',
     },
   });
 
@@ -39,11 +39,11 @@ export default function NovaCompra() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     await createPurchase(values);
     toast({
-      title: "Compra criada com sucesso!",
-      description: "Sua compra foi registrada.",
-      color: "error",
+      title: 'Compra criada com sucesso!',
+      description: 'Sua compra foi registrada.',
+      color: 'error',
     });
-    push("/compras");
+    push('/compras');
   }
 
   return (
@@ -59,12 +59,7 @@ export default function NovaCompra() {
               render={({ field }) => (
                 <div className="space-y-2">
                   <Label htmlFor="nome">Nome da Compra</Label>
-                  <Input
-                    id="nome"
-                    placeholder="COMPRA DE ABRIL 23"
-                    required
-                    {...field}
-                  />
+                  <Input id="nome" placeholder="COMPRA DE ABRIL 23" required {...field} />
                 </div>
               )}
             />

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import React from 'react';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   Pagination,
   PaginationContent,
@@ -10,7 +10,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
+} from '@/components/ui/pagination';
 
 interface PaginationComponentProps {
   totalRecords: number;
@@ -35,8 +35,8 @@ export const PaginationComponent: React.FC<PaginationComponentProps> = ({
   };
 
   const createPageUrl = (page: number) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("page", page.toString());
+    const params = new URLSearchParams((searchParams ?? '').toString());
+    params.set('page', page.toString());
     return `${pathname}?${params.toString()}`;
   };
 
@@ -46,29 +46,26 @@ export const PaginationComponent: React.FC<PaginationComponentProps> = ({
     }
 
     const leftSiblingIndex = Math.max(currentPage - siblingsCount, 2);
-    const rightSiblingIndex = Math.min(
-      currentPage + siblingsCount,
-      totalPages - 1,
-    );
+    const rightSiblingIndex = Math.min(currentPage + siblingsCount, totalPages - 1);
 
     const shouldShowLeftDots = leftSiblingIndex > 2;
     const shouldShowRightDots = rightSiblingIndex < totalPages - 1;
 
     if (!shouldShowLeftDots && shouldShowRightDots) {
       const leftRange = generatePagesArray(1, rightSiblingIndex);
-      return [...leftRange, "ellipsis", totalPages];
+      return [...leftRange, 'ellipsis', totalPages];
     }
 
     if (shouldShowLeftDots && !shouldShowRightDots) {
       const rightRange = generatePagesArray(leftSiblingIndex, totalPages);
-      return [1, "ellipsis", ...rightRange];
+      return [1, 'ellipsis', ...rightRange];
     }
 
     return [
       1,
-      shouldShowLeftDots ? "ellipsis" : 2,
+      shouldShowLeftDots ? 'ellipsis' : 2,
       ...generatePagesArray(leftSiblingIndex, rightSiblingIndex),
-      shouldShowRightDots ? "ellipsis" : totalPages - 1,
+      shouldShowRightDots ? 'ellipsis' : totalPages - 1,
       totalPages,
     ];
   };
@@ -87,7 +84,7 @@ export const PaginationComponent: React.FC<PaginationComponentProps> = ({
         )}
 
         {pages.map((page, index) => {
-          if (page === "ellipsis") {
+          if (page === 'ellipsis') {
             return (
               <PaginationItem key={`ellipsis-${index}`}>
                 <PaginationEllipsis />
@@ -97,10 +94,7 @@ export const PaginationComponent: React.FC<PaginationComponentProps> = ({
 
           return (
             <PaginationItem key={page}>
-              <PaginationLink
-                href={createPageUrl(Number(page))}
-                isActive={page === currentPage}
-              >
+              <PaginationLink href={createPageUrl(Number(page))} isActive={page === currentPage}>
                 {page}
               </PaginationLink>
             </PaginationItem>
