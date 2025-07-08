@@ -28,6 +28,14 @@ export const authOptions: AuthOptions = {
     strategy: 'database',
   },
   secret: process.env.NEXTAUTH_SECRET,
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        domain: process.env.NODE_ENV === 'production' ? '.carlos0406.com' : undefined,
+      },
+    },
+  },
 };
 
 export default NextAuth(authOptions);
