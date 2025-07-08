@@ -1,5 +1,5 @@
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 import { settings } from '@/utils/settings';
 import { cookies } from 'next/headers';
@@ -36,7 +36,7 @@ interface ShoppingListData {
 }
 
 export default async function ShoppingListView({ params }: PageProps) {
-  const { id } = params;
+  const { id } = await params;
   const cookieStore = await cookies();
   const token = cookieStore.get('next-auth.session-token')?.value;
 
