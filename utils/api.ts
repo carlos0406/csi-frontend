@@ -91,7 +91,7 @@ export async function getPurchases({ page = 1, limit = 10 }: { page?: number; li
 }
 
 export async function getXlsx(purchaseId: string) {
-  const result = await api.get(`/shopping-list/purchase/${purchaseId}/export-excel`, {
+  const result = await api.get(`/shopping-list/purchase/${purchaseId}/export-detailed-excel`, {
     responseType: 'blob',
   });
 
