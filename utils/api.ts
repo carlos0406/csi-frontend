@@ -90,6 +90,14 @@ export async function getPurchases({ page = 1, limit = 10 }: { page?: number; li
   return result;
 }
 
+export async function getXlsx(purchaseId: string) {
+  const result = await api.get(`/shopping-list/purchase/${purchaseId}/export-excel`, {
+    responseType: 'blob',
+  });
+
+  return result;
+}
+
 export async function getCards(query: string) {
   return api.get<ApiCard[]>(`/cards?name=${query}`);
 }

@@ -5,6 +5,7 @@ import { ptBR } from 'date-fns/locale';
 import { getPurchases } from '@/utils/api';
 import { PaginationComponent } from '@/components/pagination';
 import { cookies } from 'next/headers';
+import { DownloadXlsxButton } from '@/components/download-xlsx-button';
 
 type Props = {
   searchParams: Promise<{
@@ -64,8 +65,7 @@ export default async function ListasCompra({ searchParams }: Props) {
                         format(parseISO(lista.endDate), 'dd/MM/yyyy', {
                           locale: ptBR,
                         })}
-                    </td>
-
+                    </td>{' '}
                     {isAdmin && (
                       <td className="p-2 text-sm whitespace-nowrap text-blue-600 ">
                         <Link href={`/compras/${lista.id}`} className="hover:text-blue-950">
@@ -75,6 +75,9 @@ export default async function ListasCompra({ searchParams }: Props) {
                         <Link href={`/compras/${lista.id}/final`} className="hover:text-blue-950">
                           Relátorio final
                         </Link>
+                        <div className="mt-2">
+                          <DownloadXlsxButton purchaseId={lista.id} purchaseName={lista.name} />
+                        </div>
                       </td>
                     )}
                   </tr>
